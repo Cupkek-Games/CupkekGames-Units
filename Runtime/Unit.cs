@@ -38,6 +38,19 @@ namespace CupkekGames.Units
             _key = key;
         }
 
+        /// <summary>Deep copy preserving identity — features are cloned via <see cref="IUnitFeature.CloneFeature"/>.</summary>
+        public Unit(Unit other)
+        {
+            if (other == null)
+                return;
+            _id = other._id;
+            _key = other._key;
+            for (int i = 0; i < other._features.Count; i++)
+                _features.Add(other._features[i]?.CloneFeature());
+        }
+
+        public Unit Clone() => new Unit(this);
+
         // ── Features ──
 
         public void AddFeature(IUnitFeature feature) => _features.Add(feature);

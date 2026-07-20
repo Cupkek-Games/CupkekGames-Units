@@ -1,3 +1,5 @@
+using System;
+
 namespace CupkekGames.Units
 {
     /// <summary>
@@ -11,5 +13,15 @@ namespace CupkekGames.Units
 
         /// <summary>Called on <see cref="Unit.Dispose"/> — unsubscribe events, clean up.</summary>
         void OnDispose(Unit unit);
+
+        /// <summary>
+        /// Deep copy of this feature's persisted state, used by <see cref="Unit.Clone"/>.
+        /// Transient features (visual wiring, combat-time modifiers) are never part of a
+        /// cloned unit; the default implementation therefore fails loud instead of
+        /// producing a silently shallow copy.
+        /// </summary>
+        IUnitFeature CloneFeature() =>
+            throw new NotSupportedException(
+                $"{GetType().Name} does not support cloning. Persisted unit features must override CloneFeature().");
     }
 }
