@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.units",
   "displayName": "CupkekGames Units",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -15,5 +15,7 @@
     "Feature",
     "CupkekGames"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "com.cupkekgames.data": "0.3.0"
+  }
 }
