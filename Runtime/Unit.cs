@@ -71,7 +71,16 @@ namespace CupkekGames.Units
             return false;
         }
 
-        public IReadOnlyList<IUnitFeature> Features => _features;
+        /// <summary>
+        /// Feature list, settable so reflection serializers (Newtonsoft, …) can restore it —
+        /// a get-only property is written to JSON but silently dropped on load.
+        /// Unity ignores the property and binds the <c>[SerializeReference]</c> field.
+        /// </summary>
+        public List<IUnitFeature> Features
+        {
+            get => _features;
+            set => _features = value ?? new List<IUnitFeature>();
+        }
 
         // ── Lifecycle ──
 
