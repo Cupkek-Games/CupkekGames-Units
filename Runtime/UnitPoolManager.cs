@@ -6,19 +6,24 @@ namespace CupkekGames.Units
 {
     /// <summary>
     /// Centralized pool for unit 3D instances, keyed by model identifier.
-    /// Replaces CombatUnitPoolManager — works for all unit types (heroes, enemies, NPCs).
-    /// Full implementation will be wired when CharacterFeature and CombatView migration happens.
+    /// Works for all unit types (heroes, enemies, NPCs). Per-pool hooks carry
+    /// consumer-specific wiring: onReturn (e.g. view unregister) and onDispose
+    /// (e.g. addressable release).
     /// </summary>
     public class UnitPoolManager
     {
         private readonly Dictionary<string, UnitPool> _pools = new();
 
-        public void CreatePool(string modelKey, Func<GameObject> factory, int capacity = 1, int maxSize = 5)
+        public bool HasPool(string modelKey) => _pools.ContainsKey(modelKey);
+
+        public void CreatePool(string modelKey, Func<GameObject> factory,
+            Action<GameObject> onReturn = null, Action onDispose = null,
+            int capacity = 1, int maxSize = 5)
         {
             if (_pools.ContainsKey(modelKey))
                 return;
 
-            _pools[modelKey] = new UnitPool(factory, capacity, maxSize);
+            _pools[modelKey] = new UnitPool(factory, onReturn, onDispose, capacity, maxSize);
         }
 
         public GameObject Spawn(string modelKey, Vector3 position, Quaternion rotation)
@@ -37,6 +42,8 @@ namespace CupkekGames.Units
 
         public void Return(string modelKey, GameObject instance)
         {
+            if (instance == null) return;
+
             if (_pools.TryGetValue(modelKey, out var pool))
                 pool.Return(instance);
             else
@@ -53,12 +60,17 @@ namespace CupkekGames.Units
         private class UnitPool
         {
             private readonly Func<GameObject> _factory;
+            private readonly Action<GameObject> _onReturn;
+            private readonly Action _onDispose;
             private readonly Stack<GameObject> _available = new();
             private readonly int _maxSize;
 
-            public UnitPool(Func<GameObject> factory, int capacity, int maxSize)
+            public UnitPool(Func<GameObject> factory, Action<GameObject> onReturn,
+                Action onDispose, int capacity, int maxSize)
             {
                 _factory = factory;
+                _onReturn = onReturn;
+                _onDispose = onDispose;
                 _maxSize = maxSize;
 
                 for (int i = 0; i < capacity; i++)
@@ -69,13 +81,21 @@ namespace CupkekGames.Units
                 }
             }
 
+            // Skips instances destroyed while pooled (scene unloads etc.).
             public GameObject Get()
             {
-                return _available.Count > 0 ? _available.Pop() : _factory();
+                while (_available.Count > 0)
+                {
+                    var obj = _available.Pop();
+                    if (obj != null) return obj;
+                }
+
+                return _factory();
             }
 
             public void Return(GameObject instance)
             {
+                _onReturn?.Invoke(instance);
                 instance.SetActive(false);
                 if (_available.Count < _maxSize)
                     _available.Push(instance);
@@ -91,6 +111,8 @@ namespace CupkekGames.Units
                     if (obj != null)
                         UnityEngine.Object.Destroy(obj);
                 }
+
+                _onDispose?.Invoke();
             }
         }
     }
