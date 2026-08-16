@@ -9,7 +9,7 @@ namespace CupkekGames.Units
     /// List uses <see cref="IUnitFeatureDefinition"/> (extends IFeature) so the
     /// drawer only shows unit-relevant feature types, not item features.
     /// </summary>
-    [CreateAssetMenu(fileName = "UnitDefinition", menuName = "CupkekGames/Unit/Definition")]
+    [CreateAssetMenu(fileName = "UnitDefinition", menuName = "CupkekGames/Units/Definition")]
     public class UnitDefinitionSO : ScriptableObject
     {
         [SerializeField] private string _name;
